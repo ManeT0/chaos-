@@ -1,0 +1,76 @@
+# Target servers
+targets:
+  dev-server-1:
+    host: "192.168.1.100"
+    user: "devops"
+    key_path: "~/.ssh/dev_key"
+  
+  dev-server-2:
+    host: "192.168.1.101"
+    user: "devops"
+    key_path: "~/.ssh/dev_key"
+
+# scenarios to run
+scenarios:
+  - name: "CPU Spike 90%"
+    targets: ["dev-server-1"]
+    command: "stress --cpu 4 --timeout 60 &"  # here choose the number of CPU cores 
+    duration: 60 # choose the duration
+    description: "simulates CPU load of 90% for 60 seconds"
+    
+  - name: "Disk Fill 5GB"
+    targets: ["dev-server-1"]
+    command: "dd if=/dev/zero of=/tmp/chaos_fill bs=1M count=5120 && sleep 30 && rm /tmp/chaos_fill"
+    duration: 30
+    description: "fills /tmp with 5GB of garbage, holds for 30s, then deletes"
+    
+  - name: "Kill Docker Container"
+    targets: ["dev-server-1", "dev-server-2"]
+    command: "docker kill $(docker ps -q | shuf -n 1)"  # Kill a random container
+    duration: 10
+    description: "kills a random Docker container"
+    
+  - name: "HTTP Flood (internal)"
+    targets: ["dev-server-2"]
+    command: "ab -n 100000 -c 100 http://localhost:8080/ &"  # ApacheBench
+    duration: 30
+    description: "100K requests in 100 threads to localhost"
+    
+  - name: "Service Restart"
+    targets: ["dev-server-1"]
+    command: "systemctl restart nginx"
+    duration: 5
+    description: "Restarts nginx"
+
+#check s for steady state hypothesis
+hypothesis:
+  checks:
+    - name: "HTTP 5xx rate below 1%"
+      promql: "rate(http_requests_total{status=~'5..'}[5m]) / rate(http_requests_total[5m])"
+      operator: "lt"
+      threshold: 0.01
+      description: "part of 5xx errors should be less than 1%"
+    
+    - name: "P99 latency below 500ms"
+      promql: "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))"
+      operator: "lt"
+      threshold: 0.5
+      description: "99th percentile latency less than 500ms"
+    
+    - name: "Service replicas >= 3"
+      promql: "kube_deployment_status_replicas_available{deployment='api-gateway'}"
+      operator: "gt"
+      threshold: 2
+      description: "Minimum 3 replicas of API Gateway should be available"
+
+#just a schedules ;)
+schedules:
+  - name: "weekly-cpu-monday"
+    cron: "0 9 * * 1"  # every Monday at 9 AM
+    experiment: "cpu_stress"
+    target: "staging-cluster"
+    
+  - name: "daily-pod-kill"
+    cron: "0 */6 * * *"  # every 6 hours
+    experiment: "pod_delete"
+    target: "staging-cluster"
