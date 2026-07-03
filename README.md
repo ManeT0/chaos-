@@ -1,4 +1,4 @@
-```markdown
+
 # 🔥 Chaos Platform — Resilience Validation as a Service
 
 <div align="center">
@@ -450,4 +450,3 @@ If this project helped you or you find it useful:
 *"Chaos doesn't cause problems. Chaos reveals problems."*
 
 </div>
-```
