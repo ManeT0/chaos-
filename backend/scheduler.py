@@ -1,8 +1,9 @@
 from pathlib import Path
 
-import yaml
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+
+from backend.config import load_platform_config
 
 
 class ChaosScheduler:
@@ -14,17 +15,16 @@ class ChaosScheduler:
         self._load_schedules()
 
     def _load_config(self):
-        with self.config_path.open(encoding="utf-8") as config_file:
-            return yaml.safe_load(config_file) or {}
+        return load_platform_config(self.config_path)
 
     def _load_schedules(self):
-        for schedule in self.config.get("schedules", []):
+        for schedule in self.config.schedules:
             self.scheduler.add_job(
                 func=self.orchestrator.run_experiment,
-                trigger=CronTrigger.from_crontab(schedule["cron"]),
-                args=[schedule["experiment"], schedule.get("target")],
-                id=schedule["name"],
-                name=schedule["name"],
+                trigger=CronTrigger.from_crontab(schedule.cron),
+                args=[schedule.experiment, schedule.target],
+                id=schedule.name,
+                name=schedule.name,
             )
 
     def start(self):

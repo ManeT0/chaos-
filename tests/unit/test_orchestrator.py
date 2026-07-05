@@ -31,7 +31,7 @@ def test_rejects_dangerous_real_run_without_explicit_config():
 
 def test_real_run_rolls_back_when_explicitly_allowed():
     orchestrator = Orchestrator()
-    orchestrator.config["safety"]["allow_dangerous_actions"] = True
+    orchestrator.config.safety.allow_dangerous_actions = True
 
     result = orchestrator.run_experiment("cpu_stress", dry_run=False)
 
