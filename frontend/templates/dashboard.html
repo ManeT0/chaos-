@@ -1,13 +1,109 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chaos Dashboard</title>
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <h1>Chaos Dashboard</h1>
-    <section id="status">Waiting for events...</section>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>Chaos Dashboard</h1>
+          <p id="connection-status">Connecting to event stream...</p>
+        </div>
+        <div class="summary-grid" aria-label="Platform summary">
+          <section class="metric">
+            <span class="metric-label">Hypothesis</span>
+            <strong id="hypothesis-state">Checking</strong>
+          </section>
+          <section class="metric">
+            <span class="metric-label">Mode</span>
+            <strong id="safety-mode">Loading</strong>
+          </section>
+          <section class="metric">
+            <span class="metric-label">Runs</span>
+            <strong id="run-count">0</strong>
+          </section>
+        </div>
+      </header>
+
+      <section class="panel launch-panel" aria-labelledby="launch-title">
+        <div class="panel-heading">
+          <h2 id="launch-title">Run Experiment</h2>
+          <span id="launch-status" class="status-pill neutral">Idle</span>
+        </div>
+        <form id="launch-form" class="launch-form">
+          <label>
+            Experiment
+            <select id="experiment-select" name="name" required></select>
+          </label>
+          <label>
+            Target
+            <select id="target-select" name="target" required></select>
+          </label>
+          <label>
+            Duration
+            <input id="duration-input" name="duration" type="number" min="1" step="1" />
+          </label>
+          <label class="toggle-row">
+            <input id="dry-run-input" name="dryRun" type="checkbox" />
+            <span>Dry run</span>
+          </label>
+          <button type="submit">Run</button>
+        </form>
+      </section>
+
+      <section class="grid">
+        <section class="panel" aria-labelledby="experiments-title">
+          <div class="panel-heading">
+            <h2 id="experiments-title">Experiments</h2>
+            <button id="refresh-button" type="button">Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Module</th>
+                  <th>Duration</th>
+                  <th>Risk</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="experiments-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="history-title">
+          <div class="panel-heading">
+            <h2 id="history-title">History</h2>
+            <span id="history-empty" class="muted">No runs yet</span>
+          </div>
+          <ol id="history-list" class="history-list"></ol>
+        </section>
+      </section>
+
+      <section class="grid bottom-grid">
+        <section class="panel" aria-labelledby="hypothesis-title">
+          <div class="panel-heading">
+            <h2 id="hypothesis-title">Hypothesis Checks</h2>
+            <span id="hypothesis-pill" class="status-pill neutral">Checking</span>
+          </div>
+          <ul id="hypothesis-list" class="check-list"></ul>
+        </section>
+
+        <section class="panel" aria-labelledby="events-title">
+          <div class="panel-heading">
+            <h2 id="events-title">Live Events</h2>
+            <span id="event-count" class="muted">0 events</span>
+          </div>
+          <ol id="event-feed" class="event-feed"></ol>
+        </section>
+      </section>
+    </main>
     <script src="/static/dashboard.js"></script>
   </body>
 </html>

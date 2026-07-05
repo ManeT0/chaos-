@@ -1,10 +1,291 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 2rem;
+:root {
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --text: #17202a;
+  --muted: #667085;
+  --line: #d8dee6;
+  --pass: #18794e;
+  --pass-bg: #def7e9;
+  --degraded: #9a5b00;
+  --degraded-bg: #fff1cf;
+  --fail: #b42318;
+  --fail-bg: #ffe4df;
+  --neutral-bg: #e9eef5;
 }
 
-#status {
-  border: 1px solid #d0d7de;
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  background: #17202a;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+button:hover {
+  background: #263442;
+}
+
+.shell {
+  margin: 0 auto;
+  max-width: 1280px;
+  padding: 24px;
+}
+
+.topbar {
+  align-items: stretch;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr minmax(360px, 520px);
+  margin-bottom: 16px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 16px;
+}
+
+.topbar p,
+.muted,
+.metric-label,
+td,
+label span,
+.history-list span,
+.event-feed span,
+.check-list span {
+  color: var(--muted);
+}
+
+.summary-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 1rem;
+}
+
+.metric {
+  min-height: 76px;
+  padding: 14px;
+}
+
+.metric-label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.metric strong {
+  font-size: 20px;
+}
+
+.panel {
+  padding: 16px;
+}
+
+.panel-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  min-height: 32px;
+}
+
+.launch-panel {
+  margin-bottom: 16px;
+}
+
+.launch-form {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1.4fr 1.2fr 150px 120px auto;
+}
+
+label {
+  color: var(--text);
+  display: grid;
+  font-size: 13px;
+  gap: 6px;
+}
+
+input,
+select {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-height: 40px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+.toggle-row {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.toggle-row input {
+  height: 18px;
+  min-height: 18px;
+  width: 18px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  margin-bottom: 16px;
+}
+
+.bottom-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  height: 48px;
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: #344054;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.status-pill {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 24px;
+  padding: 0 10px;
+}
+
+.status-pill.pass {
+  background: var(--pass-bg);
+  color: var(--pass);
+}
+
+.status-pill.degraded {
+  background: var(--degraded-bg);
+  color: var(--degraded);
+}
+
+.status-pill.fail {
+  background: var(--fail-bg);
+  color: var(--fail);
+}
+
+.status-pill.neutral {
+  background: var(--neutral-bg);
+  color: #344054;
+}
+
+.history-list,
+.event-feed,
+.check-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-list li,
+.check-list li {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 48px;
+  padding-bottom: 10px;
+}
+
+.history-list div,
+.check-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.event-feed li {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 78px 1fr;
+  min-height: 32px;
+}
+
+@media (max-width: 900px) {
+  .topbar,
+  .grid,
+  .bottom-grid,
+  .launch-form {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .shell {
+    padding: 16px;
+  }
+
+  th,
+  td {
+    white-space: normal;
+  }
 }

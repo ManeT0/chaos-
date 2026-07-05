@@ -31,11 +31,13 @@ def health():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_connections.append(websocket)
+    await websocket.send_json({"type": "connected", "message": "Connected to chaos event stream"})
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        active_connections.remove(websocket)
+        if websocket in active_connections:
+            active_connections.remove(websocket)
 
 
 async def broadcast(event: dict):
@@ -47,24 +49,69 @@ async def broadcast(event: dict):
             stale_connections.append(connection)
 
     for connection in stale_connections:
-        active_connections.remove(connection)
+        if connection in active_connections:
+            active_connections.remove(connection)
 
 
-@app.post("/api/experiments/run")
-async def run_experiment(request: ExperimentRequest, background_tasks: BackgroundTasks):
-    background_tasks.add_task(
-        orchestrator.run_experiment,
+async def run_and_broadcast(request: ExperimentRequest):
+    await broadcast(
+        {
+            "type": "experiment_started",
+            "experiment": request.name,
+            "target": request.target,
+            "dry_run": request.dry_run,
+        }
+    )
+    result = orchestrator.run_experiment(
         request.name,
         request.target,
         request.duration_override,
         request.dry_run,
     )
+    await broadcast({"type": "experiment_completed", "result": result})
+
+
+@app.post("/api/experiments/run")
+async def run_experiment(request: ExperimentRequest, background_tasks: BackgroundTasks):
+    background_tasks.add_task(run_and_broadcast, request)
     return {
         "status": "accepted",
         "experiment": request.name,
         "target": request.target,
         "ws_endpoint": "/ws",
     }
+
+
+@app.get("/api/experiments")
+async def list_experiments():
+    return [
+        {
+            "id": experiment_id,
+            "name": experiment.name,
+            "module": experiment.module,
+            "target": experiment.target,
+            "default_duration": experiment.default_duration or experiment.duration or 30,
+            "dangerous": experiment.dangerous,
+        }
+        for experiment_id, experiment in orchestrator.config.experiments.items()
+    ]
+
+
+@app.get("/api/targets")
+async def list_targets():
+    return [
+        {
+            "id": target_id,
+            "host": target.host,
+            "user": target.user,
+        }
+        for target_id, target in orchestrator.config.targets.items()
+    ]
+
+
+@app.get("/api/platform/safety")
+async def get_safety_policy():
+    return orchestrator.config.safety.model_dump()
 
 
 @app.get("/api/experiments/history")
