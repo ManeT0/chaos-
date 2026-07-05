@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./config.yaml:/app/config.yaml
+      - ./backend/config.yaml:/app/backend/config.yaml
       - ~/.ssh:/root/.ssh:ro  # SSH keys
     environment:
       - PROMETHEUS_URL=http://prometheus:9090
@@ -17,8 +17,6 @@ services:
     image: prom/prometheus
     ports:
       - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
   grafana:
     image: grafana/grafana
@@ -27,7 +25,6 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/datasources:/etc/grafana/provisioning/datasources
 
   # test application for demo

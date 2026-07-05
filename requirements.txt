@@ -1,0 +1,8 @@
+fastapi==0.115.0
+uvicorn==0.31.0
+streamlit==1.39.0
+pydantic==2.9.0
+pytest==8.3.3
+PyYAML==6.0.2
+requests==2.32.3
+APScheduler==3.10.4

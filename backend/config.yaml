@@ -1,0 +1,58 @@
+targets:
+  demo-node-1:
+    host: "localhost"
+    user: "root"
+
+hypothesis:
+  prometheus_url: "http://localhost:9090"
+  checks: []
+
+experiments:
+  cpu_stress:
+    name: "CPU stress"
+    module: "cpu_stress"
+    default_duration: 30
+  disk_fill:
+    name: "Disk fill"
+    module: "disk_fill"
+    default_duration: 30
+  memory_stress:
+    name: "Memory stress"
+    module: "memory_stress"
+    default_duration: 30
+  network_latency:
+    name: "Network latency"
+    module: "network_latency"
+    default_duration: 30
+  packet_loss:
+    name: "Packet loss"
+    module: "packet_loss"
+    default_duration: 30
+  dns_chaos:
+    name: "DNS chaos"
+    module: "dns_chaos"
+  process_kill:
+    name: "Process kill"
+    module: "process_kill"
+  docker_kill:
+    name: "Docker kill"
+    module: "docker_kill"
+  http_flood:
+    name: "HTTP flood"
+    module: "http_flood"
+  iptables_block:
+    name: "iptables block"
+    module: "iptables_block"
+
+schedules:
+  - name: "weekly-cpu-monday"
+    cron: "0 9 * * 1"
+    experiment: "cpu_stress"
+    target: "demo-node-1"
+
+notifications:
+  telegram:
+    token: ""
+    chat_id: ""
+  slack:
+    webhook: ""

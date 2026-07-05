@@ -1,0 +1,10 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 2rem;
+}
+
+#status {
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 1rem;
+}

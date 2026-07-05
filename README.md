@@ -86,6 +86,16 @@
 
 ## 🚀 Quick Start
 
+### Project layout
+
+The repository is now organized into the following modules:
+
+- backend/ for FastAPI services, orchestration, scheduling, and persistence
+- modules/ for chaos injection implementations
+- frontend/ for dashboard UI assets
+- tests/ for unit and integration coverage
+- grafana/ and docs/ for observability and documentation
+
 ### Prerequisites
 
 - Python 3.10+
@@ -97,7 +107,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/chaos-platform.git
+git clone https://github.com/Monet0/chaos-platform.git
 cd chaos-platform
 
 # Install dependencies
@@ -105,7 +115,7 @@ pip install -r requirements.txt
 
 # Copy and edit configuration
 cp config.example.yaml config.yaml
-vim config.yaml
+vim config.yamls
 ```
 
 ### Full Stack with Docker Compose
