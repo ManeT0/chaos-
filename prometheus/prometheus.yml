@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'chaos-platform'
+
+scrape_configs:
+  # Chaos Engineering Platform API
+  - job_name: 'chaos-platform'
+    static_configs:
+      - targets: ['chaos-platform:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Demo target application (nginx)
+  - job_name: 'demo-app'
+    static_configs:
+      - targets: ['demo-app:80']
+    metrics_path: '/stub_status'
+    scrape_interval: 15s

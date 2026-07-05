@@ -3,16 +3,29 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chaos Dashboard</title>
+    <meta name="description" content="Chaos Engineering Platform — live experiment dashboard with real-time WebSocket event streaming, hypothesis validation, and experiment history." />
+    <title>Chaos Engineering Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
     <main class="shell">
+
+      <!-- ── Hero header ───────────────────────────────── -->
       <header class="topbar">
-        <div>
-          <h1>Chaos Dashboard</h1>
-          <p id="connection-status">Connecting to event stream...</p>
+        <div class="hero" aria-label="Platform header">
+          <div class="hero-title">
+            <div class="hero-icon" aria-hidden="true">⚡</div>
+            <div>
+              <h1>Chaos Platform</h1>
+              <p class="hero-sub">Engineering resilience through controlled failure</p>
+            </div>
+          </div>
+          <p id="connection-status" role="status" aria-live="polite">Connecting…</p>
         </div>
+
+        <!-- Stats row -->
         <div class="summary-grid" aria-label="Platform summary">
           <section class="metric">
             <span class="metric-label">Hypothesis</span>
@@ -23,53 +36,58 @@
             <strong id="safety-mode">Loading</strong>
           </section>
           <section class="metric">
-            <span class="metric-label">Runs</span>
+            <span class="metric-label">Total Runs</span>
             <strong id="run-count">0</strong>
           </section>
         </div>
       </header>
 
+      <!-- ── Launch panel ──────────────────────────────── -->
       <section class="panel launch-panel" aria-labelledby="launch-title">
         <div class="panel-heading">
           <h2 id="launch-title">Run Experiment</h2>
           <span id="launch-status" class="status-pill neutral">Idle</span>
         </div>
-        <form id="launch-form" class="launch-form">
-          <label>
+        <form id="launch-form" class="launch-form" autocomplete="off">
+          <label for="experiment-select">
             Experiment
             <select id="experiment-select" name="name" required></select>
           </label>
-          <label>
+          <label for="target-select">
             Target
             <select id="target-select" name="target" required></select>
           </label>
-          <label>
-            Duration
-            <input id="duration-input" name="duration" type="number" min="1" step="1" />
+          <label for="duration-input">
+            Duration (s)
+            <input id="duration-input" name="duration" type="number" min="1" step="1" placeholder="30" />
           </label>
-          <label class="toggle-row">
+          <label class="toggle-row" for="dry-run-input">
             <input id="dry-run-input" name="dryRun" type="checkbox" />
             <span>Dry run</span>
           </label>
-          <button type="submit">Run</button>
+          <button id="run-btn" type="submit">
+            <span class="btn-spinner" aria-hidden="true"></span>
+            <span class="btn-label">Run</span>
+          </button>
         </form>
       </section>
 
+      <!-- ── Middle grid: experiments + history ───────── -->
       <section class="grid">
         <section class="panel" aria-labelledby="experiments-title">
           <div class="panel-heading">
             <h2 id="experiments-title">Experiments</h2>
-            <button id="refresh-button" type="button">Refresh</button>
+            <button id="refresh-button" type="button" aria-label="Refresh experiments">↺ Refresh</button>
           </div>
           <div class="table-wrap">
-            <table>
+            <table aria-label="Registered experiments">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Module</th>
                   <th>Duration</th>
                   <th>Risk</th>
-                  <th>Status</th>
+                  <th>Last Status</th>
                 </tr>
               </thead>
               <tbody id="experiments-table"></tbody>
@@ -79,31 +97,40 @@
 
         <section class="panel" aria-labelledby="history-title">
           <div class="panel-heading">
-            <h2 id="history-title">History</h2>
+            <h2 id="history-title">Run History</h2>
             <span id="history-empty" class="muted">No runs yet</span>
           </div>
-          <ol id="history-list" class="history-list"></ol>
+          <ol id="history-list" class="history-list" aria-label="Experiment run history"></ol>
         </section>
       </section>
 
+      <!-- ── Bottom grid: hypothesis + live events ────── -->
       <section class="grid bottom-grid">
         <section class="panel" aria-labelledby="hypothesis-title">
           <div class="panel-heading">
             <h2 id="hypothesis-title">Hypothesis Checks</h2>
             <span id="hypothesis-pill" class="status-pill neutral">Checking</span>
           </div>
-          <ul id="hypothesis-list" class="check-list"></ul>
+          <ul id="hypothesis-list" class="check-list" aria-label="Steady-state hypothesis results"></ul>
         </section>
 
         <section class="panel" aria-labelledby="events-title">
           <div class="panel-heading">
-            <h2 id="events-title">Live Events</h2>
+            <h2 id="events-title">
+              Live Events
+              <span class="live-dot" aria-hidden="true"></span>
+            </h2>
             <span id="event-count" class="muted">0 events</span>
           </div>
-          <ol id="event-feed" class="event-feed"></ol>
+          <ol id="event-feed" class="event-feed" aria-label="Live experiment events" aria-live="polite"></ol>
         </section>
       </section>
+
     </main>
+
+    <!-- Toast container -->
+    <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
     <script src="/static/dashboard.js"></script>
   </body>
 </html>
