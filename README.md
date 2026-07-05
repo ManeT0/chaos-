@@ -1,6 +1,5 @@
 **Here's a polished, professional, and visually appealing English version of your README.md:**
 
-```markdown
 # 🔥 Chaos Platform — Resilience Validation as a Service
 
 <div align="center">
@@ -268,6 +267,5 @@ Distributed under the **MIT License**. See [LICENSE](LICENSE) for more informati
 ---
 
 ⭐ **If you find this project useful, please star the repository!**
-```
 
-This version is clean, modern, professional, and ready to use. You can copy it directly into `README.md`. Let me know if you want any adjustments (more technical tone, shorter version, etc.).
+
