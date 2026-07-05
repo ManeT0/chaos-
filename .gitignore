@@ -5,3 +5,4 @@ __pycache__/
 .env
 chaos.db
 *.log
+chaos_audit.log

@@ -7,6 +7,10 @@ class ExperimentRequest(BaseModel):
     name: str = Field(..., examples=["cpu_stress"])
     target: Optional[str] = Field(default=None, examples=["demo-node-1"])
     duration_override: Optional[int] = Field(default=None, ge=1)
+    dry_run: Optional[bool] = Field(
+        default=None,
+        description="Override the platform dry-run mode for this request.",
+    )
 
 
 class ExperimentResult(BaseModel):

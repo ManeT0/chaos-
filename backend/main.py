@@ -57,6 +57,7 @@ async def run_experiment(request: ExperimentRequest, background_tasks: Backgroun
         request.name,
         request.target,
         request.duration_override,
+        request.dry_run,
     )
     return {
         "status": "accepted",

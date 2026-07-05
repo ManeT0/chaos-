@@ -3,6 +3,16 @@ targets:
     host: "localhost"
     user: "root"
 
+safety:
+  dry_run: true
+  allowed_targets:
+    - "demo-node-1"
+  default_target: "demo-node-1"
+  max_duration_seconds: 120
+  allow_dangerous_actions: false
+  auto_rollback: true
+  audit_log_path: "chaos_audit.log"
+
 hypothesis:
   prometheus_url: "http://localhost:9090"
   checks: []
@@ -12,37 +22,47 @@ experiments:
     name: "CPU stress"
     module: "cpu_stress"
     default_duration: 30
+    dangerous: true
   disk_fill:
     name: "Disk fill"
     module: "disk_fill"
     default_duration: 30
+    dangerous: true
   memory_stress:
     name: "Memory stress"
     module: "memory_stress"
     default_duration: 30
+    dangerous: true
   network_latency:
     name: "Network latency"
     module: "network_latency"
     default_duration: 30
+    dangerous: true
   packet_loss:
     name: "Packet loss"
     module: "packet_loss"
     default_duration: 30
+    dangerous: true
   dns_chaos:
     name: "DNS chaos"
     module: "dns_chaos"
+    dangerous: true
   process_kill:
     name: "Process kill"
     module: "process_kill"
+    dangerous: true
   docker_kill:
     name: "Docker kill"
     module: "docker_kill"
+    dangerous: true
   http_flood:
     name: "HTTP flood"
     module: "http_flood"
+    dangerous: true
   iptables_block:
     name: "iptables block"
     module: "iptables_block"
+    dangerous: true
 
 schedules:
   - name: "weekly-cpu-monday"
