@@ -29,6 +29,23 @@ class Orchestrator:
         self.watcher = PrometheusWatcher(self.hypothesis.prometheus_url)
         self.notifier = Notifier(self.config.notifications.model_dump())
 
+    def save_config(self):
+        from backend.config import save_platform_config
+        save_platform_config(self.config, self.config_path)
+
+    def reload_config(self):
+        self.config = self._load_config()
+        # Re-initialize modules/dependencies if they changed
+        hypothesis_config = self.config.hypothesis
+        self.hypothesis = SteadyStateHypothesis(
+            hypothesis_config.prometheus_url
+        )
+        for check in hypothesis_config.checks:
+            self.hypothesis.add_check(HypothesisCheck(**check.model_dump()))
+        self.watcher = PrometheusWatcher(self.hypothesis.prometheus_url)
+        self.notifier = Notifier(self.config.notifications.model_dump())
+
+
     def run_experiment(
         self,
         name: str,

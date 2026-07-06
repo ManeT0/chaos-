@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Chaos Engineering Platform Settings" />
+    <title>Chaos Engineering Platform — Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-color, #444);
+        padding-bottom: 10px;
+      }
+      .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted, #aaa);
+        padding: 8px 16px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: color 0.2s, border-bottom 0.2s;
+      }
+      .tab-btn.active {
+        color: var(--primary-color, #ff4757);
+        border-bottom: 2px solid var(--primary-color, #ff4757);
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .form-section {
+        margin-bottom: 20px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .form-group.row {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+      }
+      .form-group label {
+        font-weight: bold;
+      }
+      .form-group input[type="text"],
+      .form-group input[type="number"],
+      .form-group select {
+        padding: 8px;
+        background: #222;
+        border: 1px solid #444;
+        color: #fff;
+        border-radius: 4px;
+      }
+      .target-item, .schedule-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #222;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        border: 1px solid #333;
+      }
+      .target-item button, .schedule-item button {
+        background: #ff4757;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .actions-bar {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+      }
+      .btn-save {
+        background: #2ed573;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .btn-back {
+        background: #57606f;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="hero">
+          <div class="hero-title">
+            <div class="hero-icon">⚙️</div>
+            <div>
+              <h1>Platform Settings</h1>
+              <p class="hero-sub">Configure safety, targets, schedules, and alerts</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('safety')">Safety Policy</button>
+        <button class="tab-btn" onclick="switchTab('targets')">Targets</button>
+        <button class="tab-btn" onclick="switchTab('schedules')">Schedules</button>
+        <button class="tab-btn" onclick="switchTab('notifications')">Notifications</button>
+      </div>
+
+      <form id="settings-form" onsubmit="saveSettings(event)">
+        <!-- Safety Section -->
+        <div id="safety" class="tab-content active">
+          <div class="panel">
+            <h2>Safety Rules</h2>
+            <div class="form-group row">
+              <input type="checkbox" id="safety-dry-run" />
+              <label for="safety-dry-run">Dry Run Mode (No actual chaos injected)</label>
+            </div>
+            <div class="form-group">
+              <label for="safety-max-duration">Max Duration (seconds)</label>
+              <input type="number" id="safety-max-duration" min="1" />
+            </div>
+            <div class="form-group row">
+              <input type="checkbox" id="safety-allow-dangerous" />
+              <label for="safety-allow-dangerous">Allow Dangerous Actions</label>
+            </div>
+            <div class="form-group row">
+              <input type="checkbox" id="safety-auto-rollback" />
+              <label for="safety-auto-rollback">Auto Rollback on Failure</label>
+            </div>
+            <div class="form-group">
+              <label for="safety-audit-log">Audit Log Path</label>
+              <input type="text" id="safety-audit-log" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Targets Section -->
+        <div id="targets" class="tab-content">
+          <div class="panel">
+            <h2>Managed Targets</h2>
+            <div id="targets-list"></div>
+            <hr style="border-color: #333; margin: 20px 0;" />
+            <h3>Add Target</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <input type="text" id="new-target-name" placeholder="Target Name (e.g. prod-host)" style="flex: 1;" />
+              <input type="text" id="new-target-host" placeholder="Host IP / domain" style="flex: 1;" />
+              <input type="text" id="new-target-user" placeholder="SSH User" style="flex: 1;" />
+              <button type="button" class="btn-save" onclick="addTarget()" style="padding: 8px 16px;">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedules Section -->
+        <div id="schedules" class="tab-content">
+          <div class="panel">
+            <h2>Schedules</h2>
+            <div id="schedules-list"></div>
+            <hr style="border-color: #333; margin: 20px 0;" />
+            <h3>Add Cron Schedule</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-width: 500px;">
+              <input type="text" id="new-sched-name" placeholder="Schedule Name (e.g. weekly-stress)" />
+              <input type="text" id="new-sched-cron" placeholder="Cron Expression (e.g. 0 9 * * 1)" />
+              <select id="new-sched-experiment">
+                <option value="cpu_stress">CPU stress</option>
+                <option value="disk_fill">Disk fill</option>
+                <option value="memory_stress">Memory stress</option>
+                <option value="network_latency">Network latency</option>
+                <option value="packet_loss">Packet loss</option>
+              </select>
+              <select id="new-sched-target">
+                <!-- Will be dynamically populated with target options -->
+              </select>
+              <button type="button" class="btn-save" onclick="addSchedule()" style="width: fit-content; padding: 8px 16px;">Add Schedule</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div id="notifications" class="tab-content">
+          <div class="panel">
+            <h2>Telegram Settings</h2>
+            <div class="form-group">
+              <label for="tg-token">Bot Token</label>
+              <input type="text" id="tg-token" placeholder="Bot token" />
+            </div>
+            <div class="form-group">
+              <label for="tg-chat-id">Chat ID</label>
+              <input type="text" id="tg-chat-id" placeholder="Chat ID" />
+            </div>
+            <hr style="border-color: #333; margin: 20px 0;" />
+            <h2>Slack Settings</h2>
+            <div class="form-group">
+              <label for="slack-webhook">Webhook URL</label>
+              <input type="text" id="slack-webhook" placeholder="https://hooks.slack.com/services/..." />
+            </div>
+          </div>
+        </div>
+
+        <div class="actions-bar">
+          <button type="submit" class="btn-save">Save & Apply Settings</button>
+          <a href="/dashboard" class="btn-back">Back to Dashboard</a>
+        </div>
+      </form>
+    </main>
+
+    <script src="/static/settings.js"></script>
+  </body>
+</html>

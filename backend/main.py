@@ -134,6 +134,32 @@ async def dashboard():
     return template.read_text(encoding="utf-8")
 
 
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page():
+    template = ROOT_DIR / "frontend" / "templates" / "settings.html"
+    return template.read_text(encoding="utf-8")
+
+
+@app.get("/api/config")
+async def get_config():
+    return orchestrator.config.model_dump()
+
+
+@app.post("/api/config/save")
+async def save_config(config_data: dict):
+    from backend.models import PlatformConfig
+    from backend.config import ConfigError
+    try:
+        validated_config = PlatformConfig.model_validate(config_data)
+        orchestrator.config = validated_config
+        orchestrator.save_config()
+        orchestrator.reload_config()
+        return {"status": "ok", "message": "Configuration saved and applied successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @app.post("/api/webhook/prometheus")
 async def prometheus_webhook(alert: dict):
     return {"status": "received", "alert": alert}
+

@@ -90,6 +90,14 @@ cp config.example.yaml config.yaml
 docker-compose up -d
 ```
 
+### Run in Lite Mode (Minimal Resources)
+If you want to run the platform on minimal resources without Prometheus, Grafana, and demo setups (saving 500+ MB of RAM):
+
+```bash
+docker-compose -f docker-compose.lite.yml up -d --build
+```
+
+
 ```bash
 # Check health
 curl http://localhost:8000/api/health

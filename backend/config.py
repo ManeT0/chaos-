@@ -156,3 +156,16 @@ def _validate_config_relations(config: PlatformConfig):
                 f"Invalid platform config: schedule '{schedule.name}' references "
                 f"unknown target '{schedule.target}'."
             )
+
+
+def save_platform_config(config: PlatformConfig, config_path: str | Path) -> None:
+    if yaml is None:
+        raise ConfigError("PyYAML is not installed; cannot save configuration.")
+    path = Path(config_path)
+    
+    # Serialize config using Pydantic, dump to dict, clean None fields if necessary
+    data = config.model_dump(exclude_none=True)
+    
+    with path.open("w", encoding="utf-8") as config_file:
+        yaml.safe_dump(data, config_file, default_flow_style=False, allow_unicode=True)
+
