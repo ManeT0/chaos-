@@ -73,8 +73,8 @@ flowchart TD
 
 ```bash
 # Clone the repository
-git clone https://github.com/ManeT0/chaos-platform.git
-cd chaos-platform
+git clone https://github.com/ManeT0/chaos-.git
+cd chaos-
 
 # Install dependencies
 pip install -r requirements.txt
@@ -87,7 +87,7 @@ cp config.example.yaml config.yaml
 ### Run with Docker Compose (Recommended)
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Run in Lite Mode (Minimal Resources)
