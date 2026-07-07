@@ -8,6 +8,12 @@ from fastapi.staticfiles import StaticFiles
 from backend.models import ExperimentRequest
 from backend.orchestrator import Orchestrator
 
+try:
+    from backend.k8s_agent_client import ChaosAgentClient
+    k8s_client = ChaosAgentClient()
+except ImportError:
+    k8s_client = None
+
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 
@@ -104,9 +110,20 @@ async def list_targets():
             "id": target_id,
             "host": target.host,
             "user": target.user,
+            "target_type": target.target_type,
         }
         for target_id, target in orchestrator.config.targets.items()
     ]
+
+@app.get("/api/k8s/pods")
+async def list_agent_pods():
+    if not k8s_client:
+        return {"error": "K8s client not configured or kubernetes package missing."}
+    try:
+        pods = k8s_client.discover_agent_pods()
+        return {"pods": pods}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.get("/api/platform/safety")

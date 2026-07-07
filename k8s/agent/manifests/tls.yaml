@@ -1,0 +1,81 @@
+# Self-signed issuer for the CA
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: chaos-selfsigned-issuer
+  namespace: chaos-platform
+spec:
+  selfSigned: {}
+---
+# Generate a CA Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: chaos-ca
+  namespace: chaos-platform
+spec:
+  isCA: true
+  commonName: chaos-ca
+  secretName: chaos-ca-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: chaos-selfsigned-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Issuer using the generated CA
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: chaos-ca-issuer
+  namespace: chaos-platform
+spec:
+  ca:
+    secretName: chaos-ca-secret
+---
+# Certificate for the Agent Server
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: chaos-agent-cert
+  namespace: chaos-platform
+spec:
+  secretName: chaos-agent-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+    - chaos-platform
+  commonName: chaos-agent
+  dnsNames:
+  - chaos-agent
+  - chaos-agent.chaos-platform.svc
+  - chaos-agent.chaos-platform.svc.cluster.local
+  - localhost
+  issuerRef:
+    name: chaos-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Certificate for the Backend Client
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: chaos-client-cert
+  namespace: chaos-platform
+spec:
+  secretName: chaos-client-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+    - chaos-platform
+  commonName: chaos-backend
+  usages:
+    - client auth
+  issuerRef:
+    name: chaos-ca-issuer
+    kind: Issuer
+    group: cert-manager.io

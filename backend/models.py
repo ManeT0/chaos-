@@ -27,10 +27,18 @@ class ExperimentResult(StrictModel):
     hypothesis_results: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class KubernetesTargetConfig(StrictModel):
+    namespace: str = "default"
+    pod_selector: dict[str, str] = Field(default_factory=dict)
+    target_type: Literal["grpc-agent", "chaos-mesh", "litmus"] = "grpc-agent"
+    grpc_port: int = 50051
+
 class TargetConfig(StrictModel):
     host: str
     user: str
     key_path: Optional[str] = None
+    target_type: Literal["ssh", "kubernetes"] = "ssh"
+    kubernetes: Optional[KubernetesTargetConfig] = None
 
 
 class SafetyConfig(StrictModel):

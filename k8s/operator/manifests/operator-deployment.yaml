@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chaos-operator
+  namespace: chaos-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chaos-operator
+  template:
+    metadata:
+      labels:
+        app: chaos-operator
+    spec:
+      serviceAccountName: chaos-operator
+      containers:
+      - name: operator
+        image: chaos-platform/operator:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ORCHESTRATOR_URL
+          value: "http://chaos-platform:8000"

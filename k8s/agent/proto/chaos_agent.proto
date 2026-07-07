@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package chaos_agent;
+
+option go_package = "github.com/ManeT0/chaos-platform/k8s/agent/proto/generated;agentpb";
+
+service ChaosAgent {
+  // Runs an experiment and streams the execution events back to the client
+  rpc RunExperiment (ExperimentRequest) returns (stream ExperimentEvent) {}
+
+  // Rolls back an experiment
+  rpc RollbackExperiment (RollbackRequest) returns (RollbackResponse) {}
+
+  // Health check endpoint
+  rpc Healthz (HealthRequest) returns (HealthResponse) {}
+}
+
+message ExperimentRequest {
+  string experiment_id = 1;
+  string type = 2; // e.g., "cpu_stress", "network_latency"
+  int32 duration_seconds = 3;
+  map<string, string> params = 4;
+}
+
+message ExperimentEvent {
+  enum EventType {
+    UNKNOWN = 0;
+    STARTED = 1;
+    LOG = 2;
+    COMPLETED = 3;
+    ERROR = 4;
+  }
+  string experiment_id = 1;
+  EventType event_type = 2;
+  string message = 3;
+  string timestamp = 4;
+}
+
+message RollbackRequest {
+  string experiment_id = 1;
+  string type = 2;
+  map<string, string> params = 3;
+}
+
+message RollbackResponse {
+  string experiment_id = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1; // e.g., "OK"
+}

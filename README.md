@@ -238,9 +238,9 @@ chaos-platform/
 - [x] Auto-Rollback & real-time monitoring
 - [x] WebSocket dashboard
 - [x] Notifications & reporting
-- [ ] Lightweight Chaos Agent (gRPC)
-- [ ] Kubernetes Operator
-- [ ] Integration with Chaos Mesh / LitmusChaos
+- [x] Lightweight Chaos Agent (gRPC)
+- [x] Kubernetes Operator
+- [x] Integration with Chaos Mesh / LitmusChaos
 - [ ] SLO-driven chaos intensity
 - [ ] ML-based recovery prediction
 

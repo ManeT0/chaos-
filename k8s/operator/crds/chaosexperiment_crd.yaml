@@ -1,0 +1,50 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: chaosexperiments.chaos-platform.io
+spec:
+  group: chaos-platform.io
+  names:
+    kind: ChaosExperiment
+    listKind: ChaosExperimentList
+    plural: chaosexperiments
+    singular: chaosexperiment
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - experiment
+              properties:
+                experiment:
+                  type: string
+                target:
+                  type: string
+                targetType:
+                  type: string
+                durationSeconds:
+                  type: integer
+                dryRun:
+                  type: boolean
+                schedule:
+                  type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                startedAt:
+                  type: string
+                finishedAt:
+                  type: string
+                result:
+                  type: string
+      subresources:
+        status: {}

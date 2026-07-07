@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: chaos-agent
+  namespace: chaos-platform
+  labels:
+    app: chaos-agent
+spec:
+  selector:
+    matchLabels:
+      app: chaos-agent
+  template:
+    metadata:
+      labels:
+        app: chaos-agent
+    spec:
+      serviceAccountName: chaos-agent
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - name: agent
+        image: chaos-platform/chaos-agent:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /chaos-agent
+        args:
+        - --port=50051
+        - --tls-cert=/etc/certs/tls.crt
+        - --tls-key=/etc/certs/tls.key
+        - --ca-cert=/etc/certs/ca.crt
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /etc/certs
+          readOnly: true
+        ports:
+        - containerPort: 50051
+          name: grpc
+          hostPort: 50051
+        - containerPort: 8081
+          name: http-health
+          hostPort: 8081
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 15
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: chaos-agent-tls

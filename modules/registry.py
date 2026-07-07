@@ -12,14 +12,16 @@ from modules import (
     network_latency,
     packet_loss,
     process_kill,
+    chaos_mesh_network,
+    chaos_mesh_pod,
+    chaos_mesh_stress,
+    litmus_engine,
 )
-
 
 @dataclass(frozen=True)
 class ChaosModule:
     run: Callable[..., dict]
     rollback: Callable[[], dict] | None = None
-
 
 MODULES: dict[str, ChaosModule] = {
     "cpu_stress": ChaosModule(run=cpu_stress.run, rollback=cpu_stress.rollback),
@@ -32,8 +34,11 @@ MODULES: dict[str, ChaosModule] = {
     "docker_kill": ChaosModule(run=docker_kill.run, rollback=docker_kill.rollback),
     "http_flood": ChaosModule(run=http_flood.run, rollback=http_flood.rollback),
     "iptables_block": ChaosModule(run=iptables_block.run, rollback=iptables_block.rollback),
+    "chaos_mesh_network": ChaosModule(run=chaos_mesh_network.run, rollback=chaos_mesh_network.rollback),
+    "chaos_mesh_pod": ChaosModule(run=chaos_mesh_pod.run, rollback=chaos_mesh_pod.rollback),
+    "chaos_mesh_stress": ChaosModule(run=chaos_mesh_stress.run, rollback=chaos_mesh_stress.rollback),
+    "litmus_engine": ChaosModule(run=litmus_engine.run, rollback=litmus_engine.rollback),
 }
-
 
 def get_module(name: str) -> ChaosModule | None:
     return MODULES.get(name)

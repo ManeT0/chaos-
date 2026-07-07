@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: chaos-agent
+  namespace: chaos-platform
+  labels:
+    app: chaos-agent
+spec:
+  clusterIP: None
+  selector:
+    app: chaos-agent
+  ports:
+  - port: 50051
+    name: grpc
+    targetPort: 50051
+  - port: 8081
+    name: http-health
+    targetPort: 8081
