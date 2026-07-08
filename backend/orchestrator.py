@@ -2,10 +2,11 @@ from datetime import datetime
 import json
 from pathlib import Path
 from typing import Any, Optional
+import requests
 
 from backend.config import load_platform_config
 from backend.hypothesis import HypothesisCheck, SteadyStateHypothesis
-from backend.models import ExperimentConfig, PlatformConfig, SafetyConfig
+from backend.models import ExperimentConfig, PlatformConfig, SafetyConfig, TargetConfig
 from backend.notifier import Notifier
 from backend.prometheus_watcher import PrometheusWatcher
 from modules.registry import get_module
@@ -71,11 +72,19 @@ class Orchestrator:
             self._audit("experiment_rejected", result)
             return result
 
+        target_config = self.config.targets.get(effective_target) if effective_target else None
+
         duration = self._duration_for(experiment, duration_override)
         effective_dry_run = safety.dry_run if dry_run is None else dry_run
+        
+        # Enforce global dry run if globally enabled
+        if safety.dry_run:
+            effective_dry_run = True
+
         safety_error = self._validate_safety(
             experiment=experiment,
-            target=effective_target,
+            target_name=effective_target,
+            target_config=target_config,
             duration=duration,
             dry_run=effective_dry_run,
         )
@@ -120,7 +129,7 @@ class Orchestrator:
             status = "dry_run"
         else:
             try:
-                module_result = self._execute_module(name, experiment, duration)
+                module_result = self._execute_module(name, experiment, duration, effective_target, target_config)
                 status = "started"
             except Exception as exc:
                 module_result = {
@@ -131,7 +140,7 @@ class Orchestrator:
                 status = "failed"
 
             if safety.auto_rollback:
-                rollback_result = self._rollback_module(name, experiment)
+                rollback_result = self._rollback_module(name, experiment, effective_target, target_config)
             else:
                 rollback_result = {
                     "status": "skipped",
@@ -171,8 +180,38 @@ class Orchestrator:
         name: str,
         experiment: ExperimentConfig,
         duration: int,
+        target_name: str,
+        target_config: Optional[TargetConfig]
     ) -> dict[str, Any]:
         module_name = experiment.module
+        
+        # Determine if we execute via agent
+        if target_config and target_config.target_type == "agent":
+            if not target_config.agent_url:
+                raise ValueError("agent_url is required for agent targets")
+            
+            headers = {}
+            if target_config.agent_token:
+                headers["Authorization"] = f"Bearer {target_config.agent_token}"
+                
+            payload = {
+                "module": module_name,
+                "experiment": name,
+                "duration": duration,
+                "command": experiment.model_dump().get("command", "")
+            }
+            try:
+                # Add timeout to agent request
+                response = requests.post(f"{target_config.agent_url}/execute", json=payload, headers=headers, timeout=10)
+                response.raise_for_status()
+                result = response.json()
+            except Exception as e:
+                raise RuntimeError(f"Agent execution failed: {e}")
+                
+            self._audit("chaos_injection", {"experiment": name, "module": module_name, "duration": duration, "agent": True})
+            return result
+
+        # Fallback to local python modules
         module = get_module(module_name)
         if module is None:
             raise ValueError(f"Chaos module '{module_name}' is not registered.")
@@ -194,8 +233,31 @@ class Orchestrator:
                 return module.run()
         return module.run()
 
-    def _rollback_module(self, name: str, experiment: ExperimentConfig) -> dict[str, Any]:
+    def _rollback_module(
+        self, 
+        name: str, 
+        experiment: ExperimentConfig,
+        target_name: str,
+        target_config: Optional[TargetConfig]
+    ) -> dict[str, Any]:
         module_name = experiment.module
+        
+        # Delegate rollback to agent if target type is agent
+        if target_config and target_config.target_type == "agent":
+            if not target_config.agent_url:
+                return {"status": "error", "reason": "agent_url missing"}
+            headers = {}
+            if target_config.agent_token:
+                headers["Authorization"] = f"Bearer {target_config.agent_token}"
+            try:
+                response = requests.post(f"{target_config.agent_url}/rollback", json={"module": module_name}, headers=headers, timeout=10)
+                response.raise_for_status()
+                result = response.json()
+            except Exception as e:
+                result = {"status": "error", "reason": f"Agent rollback failed: {e}"}
+            self._audit("chaos_rollback", {"experiment": name, "module": module_name, "result": result, "agent": True})
+            return result
+
         module = get_module(module_name)
         if module is None:
             result = {"status": "missing", "module": module_name}
@@ -223,23 +285,39 @@ class Orchestrator:
     def _validate_safety(
         self,
         experiment: ExperimentConfig,
-        target: Optional[str],
+        target_name: Optional[str],
+        target_config: Optional[TargetConfig],
         duration: int,
         dry_run: bool,
     ) -> Optional[str]:
         safety = self.config.safety
         allowed_targets = set(safety.allowed_targets)
 
-        if not target:
-            return "Target is required by safety policy."
-        if allowed_targets and target not in allowed_targets:
-            return f"Target '{target}' is not in the allowlist."
+        if not target_name or not target_config:
+            return "Target is required and must exist in config."
+            
+        if allowed_targets and target_name not in allowed_targets:
+            return f"Target '{target_name}' is not in the allowlist."
+            
+        if safety.allowed_environments:
+            target_env = target_config.labels.get("env")
+            if not target_env or target_env not in safety.allowed_environments:
+                return f"Target environment '{target_env}' is not allowed. Allowed: {safety.allowed_environments}"
+                
+        if self.running and safety.max_concurrent_targets <= 1:
+            return "Platform is already running an experiment (blast radius limit reached)."
+
         if duration > safety.max_duration_seconds:
             return f"Duration {duration}s exceeds max_duration_seconds."
+            
         if experiment.dangerous and not dry_run and not safety.allow_dangerous_actions:
             return "Dangerous chaos actions require safety.allow_dangerous_actions=true."
-        if get_module(experiment.module) is None:
-            return f"Chaos module '{experiment.module}' is not registered."
+            
+        # Skip module check if agent target, agent will handle it
+        if target_config.target_type != "agent":
+            if get_module(experiment.module) is None:
+                return f"Chaos module '{experiment.module}' is not registered locally."
+                
         return None
 
     def _audit(self, event: str, payload: dict[str, Any]):
@@ -248,6 +326,7 @@ class Orchestrator:
             "timestamp": datetime.utcnow().isoformat(),
             "payload": payload,
         }
+        # In a real setup, this would also write to DB, here it writes to a file
         log_path = Path(self.config.safety.audit_log_path)
         if not log_path.is_absolute():
             log_path = self.config_path.parent.parent / log_path

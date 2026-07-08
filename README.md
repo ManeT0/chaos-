@@ -37,6 +37,9 @@ Teams invest heavily in monitoring, alerting, and auto-healing — yet never tru
 - ✅ **12+ Chaos Modules** — CPU, memory, disk, network, DNS, processes, Docker, HTTP flood, and more
 - ✅ **Real-time Monitoring** — Live WebSocket dashboard with metrics during experiments
 - ✅ **Auto-Rollback** — Automatically halts chaos when degradation exceeds thresholds
+- ✅ **Role-Based Access Control (RBAC)** — Secure API and dashboard with JWT auth (Admin/Viewer)
+- ✅ **Chaos Agent (Go)** — Lightweight daemon for executing chaos securely without SSH
+- ✅ **Secrets Management** — Resolve env vars & HashiCorp Vault secrets dynamically
 - ✅ **GameDays Scheduler** — Recurring tests using Cron expressions
 - ✅ **REST API** — Seamless CI/CD integration (GitHub Actions, GitLab CI, Jenkins)
 - ✅ **Notifications** — Telegram & Slack alerts with experiment results
@@ -52,7 +55,7 @@ flowchart TD
     A --> C[Cron Scheduler]
     A --> D[Hypothesis Engine]
     B --> E[Chaos Orchestrator]
-    E --> F[Chaos Modules]
+    E --> F[Chaos Agent (Go)]
     E --> G[Prometheus Watcher]
     E --> H[Notifier]
     F --> I[Target Systems]
@@ -63,11 +66,15 @@ flowchart TD
 
 ## 🚀 Quick Start
 
+### 1-Click Demo Deploy
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+*(Requires connecting your repo to Render)*
+
 ### Prerequisites
 - Python 3.10+
 - Docker & Docker Compose
-- SSH access to target servers
 - Prometheus + Grafana (recommended)
+- Go 1.21+ (for Chaos Agent)
 
 ### Installation
 
@@ -90,20 +97,27 @@ cp config.example.yaml config.yaml
 docker compose up -d
 ```
 
-### Run in Lite Mode (Minimal Resources)
-If you want to run the platform on minimal resources without Prometheus, Grafana, and demo setups (saving 500+ MB of RAM):
-
+### Run Chaos Agent
+Deploy the lightweight agent to your target machines to avoid granting SSH access to the control plane.
 ```bash
-docker-compose -f docker-compose.lite.yml up -d --build
+cd agent
+go build -o chaos-agent main.go
+AGENT_TOKEN="your-token" ALLOWED_IPS="10.0.0.5" ./chaos-agent
 ```
 
+### API Examples
 
 ```bash
 # Check health
 curl http://localhost:8000/api/health
 
+# Authenticate
+curl -X POST http://localhost:8000/api/auth/token \
+  -d "username=admin&password=admin_password"
+
 # Run first experiment
 curl -X POST http://localhost:8000/api/experiments/run \
+  -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"name": "cpu_stress", "target": "demo-node-1"}'
 ```

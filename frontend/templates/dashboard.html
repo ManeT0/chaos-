@@ -135,6 +135,39 @@
     <!-- Toast container -->
     <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
+    <!-- Login Modal -->
+    <dialog id="login-modal" class="modal">
+      <form id="login-form" method="dialog">
+        <h2>Authentication Required</h2>
+        <p>Please log in to continue.</p>
+        <label>
+          Username
+          <input type="text" id="login-username" required>
+        </label>
+        <label>
+          Password
+          <input type="password" id="login-password" required>
+        </label>
+        <button type="submit" class="btn-primary">Login</button>
+      </form>
+    </dialog>
+
+    <!-- Prod Confirmation Modal -->
+    <dialog id="prod-modal" class="modal modal-danger">
+      <form id="prod-confirm-form" method="dialog">
+        <h2>⚠️ Production Target Warning</h2>
+        <p>You are about to execute a chaos experiment on a target labeled <strong>production</strong>. This requires explicit confirmation.</p>
+        <label>
+          Type target name (<span id="prod-target-name-display"></span>) to confirm:
+          <input type="text" id="prod-confirm-input" required autocomplete="off">
+        </label>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button type="button" id="prod-cancel-btn" class="btn-neutral">Cancel</button>
+          <button type="submit" id="prod-confirm-btn" class="btn-danger" disabled>Confirm Chaos</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="/static/dashboard.js"></script>
   </body>
 </html>

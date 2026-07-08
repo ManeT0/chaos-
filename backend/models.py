@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, List, Dict
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -15,6 +15,10 @@ class ExperimentRequest(StrictModel):
         default=None,
         description="Override the platform dry-run mode for this request.",
     )
+    confirm_prod: Optional[bool] = Field(
+        default=False,
+        description="Must be set to true if running on a target labeled with env=prod."
+    )
 
 
 class ExperimentResult(StrictModel):
@@ -29,7 +33,7 @@ class ExperimentResult(StrictModel):
 
 class KubernetesTargetConfig(StrictModel):
     namespace: str = "default"
-    pod_selector: dict[str, str] = Field(default_factory=dict)
+    pod_selector: Dict[str, str] = Field(default_factory=dict)
     target_type: Literal["grpc-agent", "chaos-mesh", "litmus"] = "grpc-agent"
     grpc_port: int = 50051
 
@@ -37,18 +41,30 @@ class TargetConfig(StrictModel):
     host: str
     user: str
     key_path: Optional[str] = None
-    target_type: Literal["ssh", "kubernetes"] = "ssh"
+    target_type: Literal["ssh", "kubernetes", "agent"] = "ssh"
     kubernetes: Optional[KubernetesTargetConfig] = None
+    labels: Dict[str, str] = Field(default_factory=dict)
+    agent_url: Optional[str] = None
+    agent_token: Optional[str] = None
+
+class UserConfig(StrictModel):
+    username: str
+    password_hash: str
+    role: Literal["admin", "operator", "viewer"] = "viewer"
 
 
 class SafetyConfig(StrictModel):
     dry_run: bool = True
-    allowed_targets: list[str] = Field(default_factory=list)
+    allowed_targets: List[str] = Field(default_factory=list)
     default_target: Optional[str] = None
     max_duration_seconds: int = Field(default=120, ge=1)
     allow_dangerous_actions: bool = False
     auto_rollback: bool = True
     audit_log_path: str = "chaos_audit.log"
+    users: List[UserConfig] = Field(default_factory=list)
+    allowed_environments: List[str] = Field(default_factory=list)
+    max_concurrent_targets: int = 1
+    require_prod_confirmation: bool = True
 
 
 class HypothesisCheckConfig(StrictModel):

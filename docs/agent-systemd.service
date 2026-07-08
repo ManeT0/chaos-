@@ -1,0 +1,27 @@
+[Unit]
+Description=Chaos Agent Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/chaos-agent
+ExecStart=/opt/chaos-agent/chaos-agent
+Restart=on-failure
+RestartSec=5
+
+# Environment variables
+Environment="AGENT_PORT=8081"
+Environment="AGENT_TOKEN=super-secret-agent-token"
+Environment="ALLOWED_IPS=10.0.0.5,127.0.0.1"
+
+# Resource Limits (Cgroups/ulimit)
+# Prevent chaos agent from consuming too many resources
+MemoryMax=256M
+MemorySwapMax=0
+CPUQuota=20%
+LimitNOFILE=1024
+LimitNPROC=512
+
+[Install]
+WantedBy=multi-user.target

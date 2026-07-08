@@ -108,6 +108,9 @@ def load_platform_config(config_path: str | Path) -> PlatformConfig:
     with path.open(encoding="utf-8") as config_file:
         raw_config = yaml.safe_load(config_file) or {}
 
+    from backend.secrets import resolve_secrets
+    raw_config = resolve_secrets(raw_config)
+
     try:
         config = PlatformConfig.model_validate(raw_config)
     except ValidationError as exc:

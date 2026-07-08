@@ -71,9 +71,25 @@ function operatorSymbol(op) {
 }
 
 /* ─── Fetch helper ──────────────────────────────────────────────── */
-async function fetchJson(url, options) {
+async function fetchJson(url, options = {}) {
+  const token = sessionStorage.getItem("chaos_token");
+  if (token) {
+    options.headers = options.headers || {};
+    options.headers["Authorization"] = `Bearer ${token}`;
+  }
   const res = await fetch(url, options);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (res.status === 401) {
+    showLoginModal();
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) {
+    let msg = res.statusText;
+    try {
+        const body = await res.json();
+        if (body.detail) msg = body.detail;
+    } catch (e) {}
+    throw new Error(msg);
+  }
   return res.json();
 }
 
@@ -233,13 +249,24 @@ function pushEvent(label) {
 
 /* ─── Refresh all data ──────────────────────────────────────────── */
 async function refreshDashboard() {
-  const [experiments, targets, history, safety, hypothesis] = await Promise.all([
+  const [experiments, targets, history, safety, hypothesis, user] = await Promise.all([
     fetchJson("/api/experiments"),
     fetchJson("/api/targets"),
     fetchJson("/api/experiments/history"),
     fetchJson("/api/platform/safety"),
     fetchJson("/api/hypothesis/status"),
+    fetchJson("/api/auth/me").catch(() => null), // Catch error if not logged in
   ]);
+
+  if (user && user.role === "viewer") {
+    nodes.runBtn.disabled = true;
+    nodes.runBtn.title = "Viewers cannot run experiments";
+    nodes.launchForm.style.opacity = "0.6";
+  } else {
+    nodes.runBtn.disabled = state.running;
+    nodes.runBtn.title = "";
+    nodes.launchForm.style.opacity = "1";
+  }
 
   state.experiments = experiments;
   state.targets = targets;
@@ -263,38 +290,6 @@ setInterval(async () => {
   } catch (_) { /* silent */ }
 }, 30_000);
 
-/* ─── Run experiment ────────────────────────────────────────────── */
-async function runExperiment(event) {
-  event.preventDefault();
-  if (state.running) return;
-
-  const payload = {
-    name: nodes.experimentSelect.value,
-    target: nodes.targetSelect.value,
-    dry_run: nodes.dryRunInput.checked,
-  };
-  const dur = Number(nodes.durationInput.value);
-  if (dur > 0) payload.duration_override = dur;
-
-  setRunning(true);
-  setPill(nodes.launchStatus, "Queued", "degraded");
-
-  try {
-    await fetchJson("/api/experiments/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    pushEvent(`Queued: ${payload.name}`);
-    showToast("Experiment queued", `${payload.name} → ${payload.target ?? "default target"}`, "info");
-    setTimeout(refreshDashboard, 400);
-  } catch (err) {
-    setRunning(false);
-    setPill(nodes.launchStatus, "FAIL", "fail");
-    pushEvent(`Queue failed: ${err.message}`);
-    showToast("Launch failed", err.message, "fail");
-  }
-}
 
 /* ─── WebSocket with exponential backoff ────────────────────────── */
 function connectWebSocket() {
@@ -352,6 +347,26 @@ function connectWebSocket() {
 
 /* ─── Event listeners ───────────────────────────────────────────── */
 nodes.launchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (state.running) return;
+
+  const targetId = nodes.targetSelect.value;
+  const targetConfig = state.targets.find(t => t.id === targetId);
+
+  // Check for Prod Confirmation
+  if (targetConfig && targetConfig.labels && targetConfig.labels.env === "prod") {
+    showProdModal(targetId, () => {
+      runExperiment(e).catch((err) => {
+        setRunning(false);
+        setPill(nodes.launchStatus, "FAIL", "fail");
+        pushEvent(`Error: ${err.message}`);
+        showToast("Error", err.message, "fail");
+      });
+    });
+    return;
+  }
+
+  // Normal flow
   runExperiment(e).catch((err) => {
     setRunning(false);
     setPill(nodes.launchStatus, "FAIL", "fail");
@@ -374,6 +389,95 @@ nodes.experimentSelect.addEventListener("change", () => {
   const sel = state.experiments.find((e) => e.id === nodes.experimentSelect.value);
   nodes.durationInput.value = sel?.default_duration ?? 30;
 });
+
+/* ─── Auth and Modals ───────────────────────────────────────────── */
+function showLoginModal() {
+  const modal = $("login-modal");
+  modal.showModal();
+}
+
+$("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new URLSearchParams();
+  formData.append("username", $("login-username").value);
+  formData.append("password", $("login-password").value);
+
+  try {
+    const res = await fetch("/api/auth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: formData.toString()
+    });
+    if (!res.ok) throw new Error("Invalid credentials");
+    const data = await res.json();
+    sessionStorage.setItem("chaos_token", data.access_token);
+    $("login-modal").close();
+    showToast("Logged in", "Successfully authenticated", "pass");
+    location.reload();
+  } catch (err) {
+    showToast("Login Failed", err.message, "fail");
+  }
+});
+
+let prodConfirmCallback = null;
+
+function showProdModal(targetName, onConfirm) {
+  const modal = $("prod-modal");
+  $("prod-target-name-display").textContent = targetName;
+  $("prod-confirm-input").value = "";
+  $("prod-confirm-btn").disabled = true;
+  prodConfirmCallback = onConfirm;
+  modal.showModal();
+}
+
+$("prod-confirm-input").addEventListener("input", (e) => {
+  const expected = $("prod-target-name-display").textContent;
+  $("prod-confirm-btn").disabled = (e.target.value !== expected);
+});
+
+$("prod-cancel-btn").addEventListener("click", () => {
+  $("prod-modal").close();
+});
+
+$("prod-confirm-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (prodConfirmCallback) {
+    prodConfirmCallback();
+  }
+  $("prod-modal").close();
+});
+
+// Update runExperiment payload slightly for confirm_prod
+async function runExperiment(event) {
+  if (state.running) return;
+
+  const targetId = nodes.targetSelect.value;
+  const targetConfig = state.targets.find(t => t.id === targetId);
+  const isProd = targetConfig && targetConfig.labels && targetConfig.labels.env === "prod";
+
+  const payload = {
+    name: nodes.experimentSelect.value,
+    target: targetId,
+    dry_run: nodes.dryRunInput.checked,
+    confirm_prod: isProd // Inject confirmation flag if it was a prod target
+  };
+  const dur = Number(nodes.durationInput.value);
+  if (dur > 0) payload.duration_override = dur;
+
+  setRunning(true);
+  setPill(nodes.launchStatus, "Queued", "degraded");
+
+  await fetchJson("/api/experiments/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  pushEvent(`Queued: ${payload.name}`);
+  showToast("Experiment queued", `${payload.name} → ${payload.target ?? "default target"}`, "info");
+  setTimeout(refreshDashboard, 400);
+}
 
 /* ─── Bootstrap ─────────────────────────────────────────────────── */
 refreshDashboard()

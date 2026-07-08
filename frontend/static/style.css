@@ -624,3 +624,88 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .launch-form { grid-template-columns: 1fr; }
   th, td { white-space: normal; }
 }
+
+/* ── Modals ─────────────────────────────────────────────────────── */
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 30px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  backdrop-filter: blur(16px);
+}
+
+.modal::backdrop {
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal h2 {
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 8px;
+  text-transform: none;
+}
+
+.modal p {
+  color: var(--text-2);
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal .btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 40px;
+  margin-top: 10px;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.modal .btn-primary:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.modal .btn-neutral {
+  background: var(--neutral-bg);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  min-height: 40px;
+  flex: 1;
+}
+
+.modal .btn-danger {
+  background: var(--fail-bg);
+  border: 1px solid var(--fail);
+  border-radius: var(--radius-sm);
+  color: var(--fail);
+  cursor: pointer;
+  min-height: 40px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.modal .btn-danger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modal .btn-danger:hover:not(:disabled) {
+  background: var(--fail);
+  color: #fff;
+}
