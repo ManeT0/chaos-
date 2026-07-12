@@ -51,15 +51,15 @@ Teams invest heavily in monitoring, alerting, and auto-healing — yet never tru
 
 ```mermaid
 flowchart TD
-    A[Chaos Control Plane] --> B[FastAPI + WebSocket]
-    A --> C[Cron Scheduler]
-    A --> D[Hypothesis Engine]
-    B --> E[Chaos Orchestrator]
-    E --> F[Chaos Agent (Go)]
-    E --> G[Prometheus Watcher]
-    E --> H[Notifier]
-    F --> I[Target Systems]
-    G --> J[Prometheus + Grafana]
+    A["Chaos Control Plane"] --> B["FastAPI + WebSocket"]
+    A --> C["Cron Scheduler"]
+    A --> D["Hypothesis Engine"]
+    B --> E["Chaos Orchestrator"]
+    E --> F["Chaos Agent (Go)"]
+    E --> G["Prometheus Watcher"]
+    E --> H["Notifier"]
+    F --> I["Target Systems"]
+    G --> J["Prometheus + Grafana"]
 ```
 
 ---
@@ -197,7 +197,7 @@ Live dashboard available at `/dashboard`
 - Live log streaming
 - Steady State health overview
 
-*(Add screenshot here: `docs/dashboard.png`)*
+*( screenshot will here: )*
 
 ---
 
