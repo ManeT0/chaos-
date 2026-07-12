@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "chaos-platform.fullname" . }}-agent
+  labels:
+    {{- include "chaos-platform.labels" . | nindent 4 }}
+    app: chaos-agent
+spec:
+  selector:
+    matchLabels:
+      {{- include "chaos-platform.selectorLabels" . | nindent 6 }}
+      app: chaos-agent
+  template:
+    metadata:
+      labels:
+        {{- include "chaos-platform.selectorLabels" . | nindent 8 }}
+        app: chaos-agent
+    spec:
+      serviceAccountName: {{ include "chaos-platform.fullname" . }}
+      containers:
+        - name: agent
+          image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}

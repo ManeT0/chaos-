@@ -52,6 +52,25 @@ class UserConfig(StrictModel):
     password_hash: str
     role: Literal["admin", "operator", "viewer"] = "viewer"
 
+class TeamConfig(StrictModel):
+    id: str
+    name: str
+    members: List[str] = Field(default_factory=list)
+    allowed_targets: List[str] = Field(default_factory=list)
+    allowed_experiments: List[str] = Field(default_factory=list)
+
+class ProjectConfig(StrictModel):
+    id: str
+    name: str
+    team_id: str
+    slo_target: float = 99.9
+    error_budget_minutes: int = 43
+
+class SLOConfig(StrictModel):
+    name: str
+    prometheus_expr: str
+    target_ratio: float
+    window_hours: int = 720
 
 class SafetyConfig(StrictModel):
     dry_run: bool = True
@@ -66,19 +85,38 @@ class SafetyConfig(StrictModel):
     max_concurrent_targets: int = 1
     require_prod_confirmation: bool = True
 
+ProbeType = Literal["prometheus", "datadog", "newrelic", "elastic", "http", "tcp", "script"]
 
 class HypothesisCheckConfig(StrictModel):
     name: str
-    promql: str
-    operator: Literal["lt", "lte", "gt", "gte", "eq"]
-    threshold: float
+    probe_type: ProbeType = "prometheus"
+    promql: Optional[str] = None
+    operator: Optional[Literal["lt", "lte", "gt", "gte", "eq"]] = None
+    threshold: Optional[float] = None
     description: str = ""
+    url: Optional[str] = None
+    expected_status: Optional[int] = None
+    body_regex: Optional[str] = None
+    host: Optional[str] = None
+    port: Optional[int] = None
+    script_path: Optional[str] = None
+    timeout_seconds: Optional[int] = 5
+    datadog_query: Optional[str] = None
+    newrelic_nrql: Optional[str] = None
+    elastic_index: Optional[str] = None
+    elastic_query: Optional[str] = None
 
+
+class CheckGroupConfig(StrictModel):
+    name: str
+    mode: Literal["AND", "OR"] = "AND"
+    checks: List[HypothesisCheckConfig] = Field(default_factory=list)
 
 class HypothesisConfig(StrictModel):
     prometheus_url: str = "http://localhost:9090"
-    checks: list[HypothesisCheckConfig] = Field(default_factory=list)
-
+    mode: Literal["AND", "OR"] = "AND"
+    check_groups: List[CheckGroupConfig] = Field(default_factory=list)
+    checks: List[HypothesisCheckConfig] = Field(default_factory=list)
 
 class ExperimentConfig(StrictModel):
     name: str
@@ -88,6 +126,11 @@ class ExperimentConfig(StrictModel):
     dangerous: bool = False
     target: Optional[str] = None
 
+class ExperimentTemplateConfig(StrictModel):
+    name: str
+    description: str = ""
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    experiment: ExperimentConfig
 
 class ScheduleConfig(StrictModel):
     name: str
@@ -108,6 +151,8 @@ class SlackConfig(StrictModel):
 class NotificationsConfig(StrictModel):
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
     slack: SlackConfig = Field(default_factory=SlackConfig)
+    teams_webhook: str = ""
+    pagerduty_routing_key: str = ""
 
 
 class PlatformConfig(StrictModel):
@@ -117,3 +162,6 @@ class PlatformConfig(StrictModel):
     experiments: dict[str, ExperimentConfig] = Field(default_factory=dict)
     schedules: list[ScheduleConfig] = Field(default_factory=list)
     notifications: NotificationsConfig = Field(default_factory=NotificationsConfig)
+    teams: list[TeamConfig] = Field(default_factory=list)
+    projects: list[ProjectConfig] = Field(default_factory=list)
+    slos: list[SLOConfig] = Field(default_factory=list)

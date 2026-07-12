@@ -1,0 +1,48 @@
+replicaCount: 1
+
+image:
+  repository: myrepo/chaos-platform
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+operator:
+  image:
+    repository: myrepo/chaos-operator
+    tag: "latest"
+  replicaCount: 1
+
+agent:
+  image:
+    repository: myrepo/chaos-agent
+    tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+prometheus:
+  enabled: false

@@ -16,6 +16,10 @@ from modules import (
     chaos_mesh_pod,
     chaos_mesh_stress,
     litmus_engine,
+    pod_kill,
+    node_drain,
+    region_failure,
+    db_chaos,
 )
 
 @dataclass(frozen=True)
@@ -38,6 +42,10 @@ MODULES: dict[str, ChaosModule] = {
     "chaos_mesh_pod": ChaosModule(run=chaos_mesh_pod.run, rollback=chaos_mesh_pod.rollback),
     "chaos_mesh_stress": ChaosModule(run=chaos_mesh_stress.run, rollback=chaos_mesh_stress.rollback),
     "litmus_engine": ChaosModule(run=litmus_engine.run, rollback=litmus_engine.rollback),
+    "pod_kill": ChaosModule(run=pod_kill.run, rollback=pod_kill.rollback),
+    "node_drain": ChaosModule(run=node_drain.run, rollback=node_drain.rollback),
+    "region_failure": ChaosModule(run=region_failure.run, rollback=region_failure.rollback),
+    "db_chaos": ChaosModule(run=db_chaos.run, rollback=db_chaos.rollback),
 }
 
 def get_module(name: str) -> ChaosModule | None:

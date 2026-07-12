@@ -1,0 +1,9 @@
+name: "network-partition"
+description: "Simulates a network partition by blocking traffic to specific pods."
+module: "region_failure"
+parameters:
+  namespace: "default"
+  target_labels:
+    app: "frontend"
+  isolate_from_labels:
+    app: "backend"

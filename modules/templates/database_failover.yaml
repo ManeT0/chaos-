@@ -1,0 +1,8 @@
+name: "database-failover"
+description: "Triggers a database failover by dropping connections to the primary DB."
+module: "db_chaos"
+parameters:
+  chaos_type: "connection_drop"
+  port: 5432
+  duration: 120
+  target_host: "127.0.0.1"

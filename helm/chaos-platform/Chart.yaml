@@ -1,0 +1,11 @@
+apiVersion: v2
+name: chaos-platform
+description: A Helm chart for the Chaos Engineering Platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: kube-prometheus-stack
+    version: "61.3.0"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: prometheus.enabled

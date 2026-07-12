@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: chaos-experiment-task
+  namespace: default
+spec:
+  params:
+    - name: experiment
+      type: string
+    - name: target
+      type: string
+    - name: duration
+      type: string
+  steps:
+    - name: run-chaos
+      image: curlimages/curl
+      script: |
+        #!/bin/sh
+        echo "Starting chaos experiment $(params.experiment) on $(params.target)"
+        curl -X POST -H "Content-Type: application/json" \
+          -d '{"name": "$(params.experiment)", "target": "$(params.target)", "duration_override": $(params.duration)}' \
+          http://chaos-platform:8000/api/experiments/run
+        echo "Chaos experiment completed"

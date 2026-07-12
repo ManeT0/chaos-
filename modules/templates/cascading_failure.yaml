@@ -1,0 +1,8 @@
+name: "cascading-failure"
+description: "Simulates a cascading failure by slowing down the DB and exhausting connections."
+module: "db_chaos"
+parameters:
+  chaos_type: "connection_pool_exhaust"
+  port: 5432
+  connections: 500
+  duration: 300

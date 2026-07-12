@@ -1,0 +1,40 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: chaosschedules.chaos-platform.io
+spec:
+  group: chaos-platform.io
+  names:
+    kind: ChaosSchedule
+    listKind: ChaosScheduleList
+    plural: chaosschedules
+    singular: chaosschedule
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - schedule
+                - experimentTemplate
+              properties:
+                schedule:
+                  type: string
+                experimentTemplate:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+            status:
+              type: object
+              properties:
+                lastRun:
+                  type: string
+                nextRun:
+                  type: string
+      subresources:
+        status: {}

@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: chaos-experiment-workflow
+  namespace: default
+spec:
+  templates:
+  - name: chaos-experiment
+    inputs:
+      parameters:
+      - name: experiment
+      - name: target
+      - name: duration
+    container:
+      image: curlimages/curl
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "Starting chaos experiment {{inputs.parameters.experiment}} on {{inputs.parameters.target}}"
+          curl -X POST -H "Content-Type: application/json" \
+            -d '{"name": "{{inputs.parameters.experiment}}", "target": "{{inputs.parameters.target}}", "duration_override": {{inputs.parameters.duration}}}' \
+            http://chaos-platform:8000/api/experiments/run
+          echo "Chaos experiment completed"

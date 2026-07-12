@@ -1,0 +1,7 @@
+name: "pod-kill-rolling"
+description: "Kills pods matching the selector one by one in a rolling fashion."
+module: "pod_kill"
+parameters:
+  namespace: "default"
+  label_selector: "app=my-app"
+  count: 1

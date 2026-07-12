@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "chaos-platform.fullname" . }}
+  labels:
+    {{- include "chaos-platform.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "chaos-platform.selectorLabels" . | nindent 6 }}

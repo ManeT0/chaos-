@@ -1,0 +1,6 @@
+name: "zone-outage"
+description: "Simulates a complete zone outage by isolating all nodes in a specific zone."
+module: "node_drain"
+parameters:
+  node_name: "node-zone-a-1"
+  evict_pods: true

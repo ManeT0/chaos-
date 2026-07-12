@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chaos-platform.fullname" . }}-operator
+  labels:
+    {{- include "chaos-platform.labels" . | nindent 4 }}
+    app: chaos-operator
+spec:
+  replicas: {{ .Values.operator.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "chaos-platform.selectorLabels" . | nindent 6 }}
+      app: chaos-operator
+  template:
+    metadata:
+      labels:
+        {{- include "chaos-platform.selectorLabels" . | nindent 8 }}
+        app: chaos-operator
+    spec:
+      serviceAccountName: {{ include "chaos-platform.fullname" . }}
+      containers:
+        - name: operator
+          image: "{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
